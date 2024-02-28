@@ -22,6 +22,10 @@ There are 3 smart contracts in here (at least for now - 28 feb 2024):
 
 · The supply is 1_618_033_969
 
+· Of the 100% of this supply, 20% will go to the liquidity pool and the remaining 80% will be distributed in the subsequent 8 sojourns to all of the writers that participate on anky (that own an Anky Writer NFT) following this table:
+
+![newen tokenomics](https://github.com/jpfraneto/images/blob/main/newen-table-v3.png?raw=true)
+
 ### 3. NewenAirdrop1.sol
 
 · This will be the smart contract that will distribute the $newen that corresponds to the third sojourn (10% of the total supply) to the 192 participants (people that own that NFT) and that write through anky every day.
