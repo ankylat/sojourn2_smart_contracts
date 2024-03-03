@@ -79,37 +79,37 @@ contract NewenAirdropOne is Ownable, ReentrancyGuard {
     mapping(uint256 => mapping(address => bool)) public hasUserClaimedInResonanceWave; // resonance wave -> address -> claimedStatus
     
     constructor(address _newenToken, address _ankyWriters, uint256 _startTimestamp, uint256 _endTime) Ownable(msg.sender) {
-        if (endTime_ <= block.timestamp) revert EndTimeInPast();
+        if (_endTime <= block.timestamp) revert EndTimeInPast();
         require(_newenToken != address(0) && _ankyWriters != address(0), "Invalid addresses");
         END_TIME = _endTime;
         NEWEN_TOKEN = _newenToken;
         ankyWriters = IERC721(_ankyWriters);
-        startTimestamp = block.timestamp; // The moment on which this contract is deployed (at the beginning of the third sojourn)
+        startingTimestamp = block.timestamp; // The moment on which this contract is deployed (at the beginning of the third sojourn)
     }
 
     /**
      *  @dev Returns true if the index has been marked claimed
      *  @param index The index of the claimer in the merkle tree - index of the anky writers nft
-     */
-    function isClaimed(uint256 _ankyWritersIndex, uint256 _cycle) public view returns (bool) {
+     **/
+    function isClaimed(uint256 _ankyWritersIndex, uint256 _resonanceWave) public view returns (bool) {
         address ownerOfThisAnkyWriterAddress = ankyWriters.ownerOf(_ankyWritersIndex);
-        return hasUserClaimedInCycle[_cycle][ownerOfThisAnkyWriterAddress];
+        return hasUserClaimedInResonanceWave[_resonanceWave][ownerOfThisAnkyWriterAddress];
     }
 
     /**
      *  @dev Marks the index as claimed
      *  @param index The index of the claimer in the merkle tree
-     */
-    function _setClaimed(uint256 _ankyWritersIndex, uint256 _cycle) private {
+     **/
+    function _setClaimed(uint256 _ankyWritersIndex, uint256 _resonanceWave) private {
         address ownerOfThisAnkyWriterAddress = ankyWriters.ownerOf(_ankyWritersIndex);
-        hasUserClaimedInCycle[_cycle] = true;
+        hasUserClaimedInResonanceWave[_resonanceWave][ownerOfThisAnkyWriterAddress] = true;
     }
     
     function getCurrentResonanceWave() public view returns (uint256) {
-        if(block.timestamp < startTimestamp) {
+        if(block.timestamp < startingTimestamp) {
             return 0;
         }
-        return ((block.timestamp - startTimestamp) / RESONANCE_WAVE_DURATION) + 1;
+        return ((block.timestamp - startingTimestamp) / RESONANCE_WAVE_DURATION) + 1;
     }
 
     /**
@@ -121,7 +121,7 @@ contract NewenAirdropOne is Ownable, ReentrancyGuard {
      */
     function claim(
         uint256 _ankyWritersIndex,
-        uint246 _resonanceWave,
+        uint256 _resonanceWave,
         address account,
         uint256 amount,
         bytes32[] calldata merkleProof
@@ -129,9 +129,9 @@ contract NewenAirdropOne is Ownable, ReentrancyGuard {
         if (block.timestamp > END_TIME) revert ClaimWindowFinished();
         if (isClaimed(_ankyWritersIndex, _resonanceWave)) revert AlreadyClaimed();
         uint256 currentResonanceWave = getCurrentResonanceWave();
-        require(currentResonanceWave <= resonanceWaveCount, "newen airdrop 1 is over -> the third sojourn ended");
-        require(ankyWriters.ownerOf(_userAnkyWriterId) == msg.sender, "you are not the owner of this anky writer");
-        require(!hasClaimed[currentResonanceWave][msg.sender], "you already claimed your newen for this cycle");
+        require(currentResonanceWave <= resonanceWavesCount, "newen airdrop 1 is over -> the third sojourn ended");
+        require(ankyWriters.ownerOf(_ankyWritersIndex) == msg.sender, "you are not the owner of this anky writer");
+        require(!hasUserClaimedInResonanceWave[currentResonanceWave][msg.sender], "you already claimed your newen for this cycle");
 
         // Verify the merkle proof.
         bytes32 node = keccak256(abi.encodePacked(_ankyWritersIndex, account, amount));
@@ -144,7 +144,7 @@ contract NewenAirdropOne is Ownable, ReentrancyGuard {
         // Mark it claimed and send the token.
         _setClaimed(_ankyWritersIndex, currentResonanceWave);
     
-        IERC20(TOKEN).safeTransfer(account, amount);
+        IERC20(NEWEN_TOKEN).safeTransfer(account, amount);
 
         emit Claimed(_ankyWritersIndex, account, amount);
     }
@@ -155,9 +155,9 @@ contract NewenAirdropOne is Ownable, ReentrancyGuard {
     function withdraw() external onlyOwner {
         if (block.timestamp < END_TIME) revert NoWithdrawDuringClaim();
 
-        IERC20(TOKEN).safeTransfer(
+        IERC20(NEWEN_TOKEN).safeTransfer(
             msg.sender,
-            IERC20(TOKEN).balanceOf(address(this))
+            IERC20(NEWEN_TOKEN).balanceOf(address(this))
         );
     }
 }

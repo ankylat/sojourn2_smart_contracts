@@ -4,7 +4,7 @@ Welcome to the codebase for the second sojourn of Anky.
 
 What we will ship on the 9th of march at 5 am eastern time is the system that will give birth to the creation of $newen: the ERC20 token that will reward the early dreamers -writers- of anky.
 
-There are 3 smart contracts in here (at least for now - 28 feb 2024):
+There are 3 smart contracts in here (at least for now - 3 mar 2024):
 
 ### 1. AnkyWriters.sol
 
@@ -16,9 +16,11 @@ There are 3 smart contracts in here (at least for now - 28 feb 2024):
 
 · The transfer window for these NFTs is in-between sojourns (on a 21 day period called the great slumber)
 
+· There will be 3 days after the sojourn when people will be able to burn their previous nft and get a new one claimed, and then a 4 day period on which the mint will be open to the public.
+
 ### 2. NewenToken.sol
 
-· This will be the contract that will give birth to $newen.
+· This will be the contract that will give birth to $newen. It's as simple as possible because the important part is what happens with the tokens after they are minted.
 
 · The supply is 1_618_033_969
 
@@ -33,3 +35,7 @@ There are 3 smart contracts in here (at least for now - 28 feb 2024):
 · The minimum writing time is 8 minutes. If a person writes the 96 days for 8 minutes, that person will get their full allocation of $newen corresponding to this specific cycle (which is capped at 842_826 $newen - which is 10% \* TOTAL_SUPPLY / 192)
 
 · It doesn't make sense to establish now which will be the mechanism for the subsequent airdrops. Who knows where we (humanity) will be in two years. It is a decision that we will explore in the future as a community.
+
+...
+
+- does it make sense to put all the nfts on this smart contract? -> that would be an avenue for decentralization.
