@@ -35,11 +35,6 @@ async function main() {
     constructorArguments: ["Anky Writers", "ANKYW", 8888, NewenToken.target],
   });
 
-  await run("verify:verify", {
-    address: AnkyDementor.target,
-    constructorArguments: [AnkyAirdrop.target],
-  });
-
   console.log("All contracts deployed and verified!");
 }
 
