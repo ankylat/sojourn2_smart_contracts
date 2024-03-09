@@ -27,6 +27,8 @@ contract AnkyWriters is ERC721AQueryable,
         uint256 lastTokenId;
     }
 
+    bool public isYoinkable = true;
+
     uint256 public deploymentTimestamp;
     uint256 public constant SOJOURN_DURATION = 96 days; 
     uint256 public constant GREAT_SLUMBER = 21 days;
@@ -55,8 +57,6 @@ contract AnkyWriters is ERC721AQueryable,
     error NotLockedIn();
     error NotGameOver();
 
-    bytes32 teamMintBlockHash;
-
     event SaleWindowOpened(uint256 saleStartTime);
     event ContractTerminated(address treasury);
     event Refund(address to, uint256 amount);
@@ -71,14 +71,18 @@ contract AnkyWriters is ERC721AQueryable,
             startingTimestamp: 1691643600,
             endingTimestamp: 1691643600 + SOJOURN_DURATION,
             participants: amountOfWritersPerSojourn[0],
-            accumulatedParticipants: accumulatedParticipants
+            accumulatedParticipants: accumulatedParticipants,
+            firstTokenId: 0,
+            lastTokenId: 0
         }));
         sojourns.push(Sojourn({
             sojournNumber: 2,
             startingTimestamp: 1701752400,
             endingTimestamp: 1701752400 + SOJOURN_DURATION,
             participants: amountOfWritersPerSojourn[1],
-            accumulatedParticipants: accumulatedParticipants
+            accumulatedParticipants: accumulatedParticipants,
+            firstTokenId: 0,
+            lastTokenId: 0
         }));
 
         for (uint256 i = 2; i < 10; i++) {
@@ -94,7 +98,11 @@ contract AnkyWriters is ERC721AQueryable,
                 lastTokenId: sojourns[i - 1].accumulatedParticipants + 1 + participants
             }));
         }
-        _mint(msg.sender, 192);
+        // why are the 192 nfts sent to the wallet? this is only if we decide for this to be yoinked.
+
+        if(isYoinkable) {
+          _mint(msg.sender, 192);
+        }
     }
 
     function sendAllNftsToRandomWriters(address[] addresses) onlyOwner {
@@ -103,24 +111,16 @@ contract AnkyWriters is ERC721AQueryable,
       }
     }
 
+    function sendThisNftToRandomWriter(unit256 tokenId, address _targetWriter) internal {
+      address ownerOfThisOne = ownerOf(tokenId);
+      _transfer(ownerOfThisOne, _targetWriter, tokenId);
+    }
+
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-      uint256 sojournNumberForThisToken = determineSojournNumber(tokenId);
       string memory baseURI = sojournBaseURIs[sojournNumberForThisToken];
-      
-      return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, Strings.toString(tokenId))) : "";
-    }
 
-    function setSojournBaseURI(uint256 sojournNumber, string memory baseURI) public onlyOwner {
-      require(sojournNumber > 2, "metadata for the first two sojourns can't be set.");
-      require(block.timestamp > sojourns[sojournNumber - 2].endingTimestamp, "previous sojourn hasn't ended.");
-      require(block.timestamp < sojourns[sojournNumber - 1].startingTimestamp, "sojourn already started.");
-      
-      sojournBaseURIs[sojournNumber] = baseURI;
-    }
-
-    function determineSojournNumber(uint256 tokenId) internal view returns (uint256) {
       if (tokenId >= 1 && tokenId <= 192) {
-          return 3; 
+          return tokenUriForSojourn[3]; 
       } else if (tokenId >= 193 && tokenId <= 504) {
           return 4; 
       } else if (tokenId >= 505 && tokenId <= 1008) {
@@ -136,16 +136,20 @@ contract AnkyWriters is ERC721AQueryable,
       } else if (tokenId >= 8737 && tokenId <= 14328) {
         return 10;
       }
-      return 0;
+      
+      return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, Strings.toString(tokenId))) : "";
+    }
+
+    function setSojournBaseURI(uint256 sojournNumber, string memory baseURI) public onlyOwner {
+      require(sojournNumber > 2, "metadata for the first two sojourns can't be set.");
+      require(block.timestamp > sojourns[sojournNumber - 2].endingTimestamp, "previous sojourn hasn't ended.");
+      require(block.timestamp < sojourns[sojournNumber - 1].startingTimestamp, "sojourn already started.");
+      
+      sojournBaseURIs[sojournNumber] = baseURI;
     }
 
     function setupContractAsOperator() public onlyOwner {
       setApprovalForAll(address(this), true);
-    }
-
-    function sendThisNftToRandomWriter(unit256 tokenId, address _targetWriter) private {
-      address ownerOfThisOne = ownerOf(tokenId);
-      _transfer(ownerOfThisOne, _targetWriter, tokenId);
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -219,8 +223,8 @@ contract AnkyWriters is ERC721AQueryable,
   }
 
   function claim(uint256 tokenId) public {
-    require(block.timestamp <= deploymentTimestamp + 7 days, "Claim period has ended.");
-    require(lastClaimTimestamp[tokenId] + 30 minutes < block.timestamp, "Cooldown period has not passed.");
+    require(block.timestamp <= deploymentTimestamp + 7 days, "claim period has ended.");
+    require(lastClaimTimestamp[tokenId] + 30 minutes < block.timestamp, "cooldown period has not passed.");
     require(balanceOf(msg.sender) == 0, "you already own one of these... for now");
     address ownerOfThisOne = ownerOf(tokenId);
     lastClaimTimestamp[tokenId] = block.timestamp;
