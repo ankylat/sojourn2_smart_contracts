@@ -7,32 +7,14 @@ async function main() {
   const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545/");
   const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-  // Deployment of NewenToken
-  console.log("Now the NewenToken will be deployed");
-  const NewenToken = await ethers.deployContract("Newen", []);
-  await NewenToken.waitForDeployment();
-  console.log(`NewenToken deployed at: ${NewenToken.target}`);
-
-  // Deployment of AnkyWriters
-  // console.log("Now the AnkyWriters will be deployed");
-  // const AnkyWriters = await ethers.deployContract("AnkyWriters", [
-  //   "Anky Writers",
-  //   "ANKYW",
-  //   8888,
-  //   NewenToken.target,
-  // ]);
-  // await AnkyWriters.waitForDeployment();
-  // console.log(`AnkyWriters deployed at: ${AnkyWriters.target}`);
+  const AnkyDiaries = await ethers.deployContract("AnkyDiaries", []);
+  await AnkyDiaries.waitForDeployment();
+  console.log(`AnkyDiaries deployed at: ${AnkyDiaries.target}`);
 
   await run("verify:verify", {
-    address: NewenToken.target,
+    address: AnkyDiaries.target,
     constructorArguments: [],
   });
-
-  // await run("verify:verify", {
-  //   address: AnkyWriters.target,
-  //   constructorArguments: ["Anky Writers", "ANKYW", 8888, NewenToken.target],
-  // });
 
   console.log("All contracts deployed and verified!");
 }
